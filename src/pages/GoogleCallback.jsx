@@ -4,51 +4,64 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import "../components/layout/ProtectedRoute.css";
 
-
 export default function GoogleCallback() {
-  const navigate           = useNavigate();
-  const [searchParams]     = useSearchParams();
-  const { user, loading, setGoogleToken } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  /* Step 1 — on mount, read token from URL and save it to AuthContext */
+  const {
+    user,
+    loading,
+    setGoogleToken,
+  } = useAuth();
+
+  // ============================================================
+  // STEP 1 — Get JWT from backend and save it
+  // ============================================================
+
   useEffect(() => {
     const token = searchParams.get("token");
-    const isNew = searchParams.get("new");
 
     if (!token) {
-      /* no token — something went wrong */
       toast.error("Google sign-in failed. Please try again.");
       navigate("/", { replace: true });
       return;
     }
 
-    /* save token → triggers AuthContext useEffect → fetches user profile */
+    // Save JWT to localStorage through AuthContext
     setGoogleToken(token);
 
-    /* store isNew flag so we can show the right toast after user loads */
-    sessionStorage.setItem("google_is_new", isNew === "1" ? "1" : "0");
+    // Remove token from browser URL
+    window.history.replaceState(
+      {},
+      "",
+      "/auth/callback"
+    );
+  }, [searchParams, setGoogleToken, navigate]);
 
-    /* clean the token out of the URL */
-    window.history.replaceState({}, "", "/auth/callback");
-  }, []);
-
+  // ============================================================
+  // STEP 2 — Wait for AuthContext to load user
+  // ============================================================
 
   useEffect(() => {
-    if (!loading && user) {
-      const isNew = sessionStorage.getItem("google_is_new");
-      sessionStorage.removeItem("google_is_new");
+    if (loading) {
+      return;
+    }
 
+    if (user) {
       toast.success(
-        isNew === "1"
-          ? "Account Created! Welcome to VoxIQ 🎉"
-          : "Login Successful! Welcome back 👋"
+        "Login Successful! Welcome back 👋"
       );
 
-      navigate("/home", { replace: true });
+      navigate("/home", {
+        replace: true,
+      });
     }
-  }, [loading, user]);
+  }, [loading, user, navigate]);
 
-  
+  // ============================================================
+  // LOADING SCREEN
+  // ============================================================
+
   return (
     <div className="protected-loader">
       <div className="protected-spinner" />

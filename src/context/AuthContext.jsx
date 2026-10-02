@@ -1,77 +1,205 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../api/auth';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
-const AuthContext = createContext(null);
+import { authAPI } from "../api/auth";
 
-export function AuthProvider({ children }) {
-  const [user,    setUser]    = useState(null);
-  const [token,   setToken]   = useState(() => localStorage.getItem('voxiq_token') ?? null);
-  const [loading, setLoading] = useState(true);
 
-  /* ── restore user session whenever token changes ── */
+const AuthContext =
+  createContext(null);
+
+
+export function AuthProvider({
+  children,
+}) {
+
+  const [user, setUser] =
+    useState(null);
+
+  const [token, setToken] =
+    useState(
+      () =>
+        localStorage.getItem(
+          "voxiq_token"
+        )
+    );
+
+  const [loading, setLoading] =
+    useState(true);
+
+
+  // ==========================================================
+  // RESTORE SESSION
+  // ==========================================================
+
   useEffect(() => {
-    if (token) {
-      authAPI.getMe()
-        .then(data => setUser(data))
-        .catch(() => {
-          localStorage.removeItem('voxiq_token');
-          setToken(null);
-          setUser(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
+
+    if (!token) {
+
       setUser(null);
       setLoading(false);
+
+      return;
     }
+
+
+    authAPI.getMe()
+
+      .then((data) => {
+        setUser(data);
+      })
+
+      .catch(() => {
+
+        localStorage.removeItem(
+          "voxiq_token"
+        );
+
+        setToken(null);
+        setUser(null);
+      })
+
+      .finally(() => {
+        setLoading(false);
+      });
+
   }, [token]);
 
-  /* ── email/password login ── */
-  const login = async (email, password) => {
-    const data = await authAPI.login(email, password);
-    localStorage.setItem('voxiq_token', data.access_token);
-    setToken(data.access_token);
+
+  // ==========================================================
+  // LOGIN
+  // ==========================================================
+
+  const login = async (
+    email,
+    password
+  ) => {
+
+    const data =
+      await authAPI.login(
+        email,
+        password
+      );
+
+    localStorage.setItem(
+      "voxiq_token",
+      data.access_token
+    );
+
+    setToken(
+      data.access_token
+    );
+
     setUser(data.user);
+
     return data;
   };
 
-  /* ── register ── */
-  const register = async (name, email, password) => {
-    const data = await authAPI.register(name, email, password);
-    localStorage.setItem('voxiq_token', data.access_token);
-    setToken(data.access_token);
+
+  // ==========================================================
+  // REGISTER
+  // ==========================================================
+
+  const register = async (
+    name,
+    email,
+    password
+  ) => {
+
+    const data =
+      await authAPI.register(
+        name,
+        email,
+        password
+      );
+
+    localStorage.setItem(
+      "voxiq_token",
+      data.access_token
+    );
+
+    setToken(
+      data.access_token
+    );
+
     setUser(data.user);
+
     return data;
   };
 
-  /* ── Google OAuth — called from HomePage after redirect ── */
+
+  // ==========================================================
+  // GOOGLE
+  // ==========================================================
+
   const loginWithGoogle = () => {
-    authAPI.googleOAuth(); // redirects browser to Google
+    authAPI.googleOAuth();
   };
 
-  /* ── called from HomePage after Google redirects back with ?token= ── */
-  const setGoogleToken = (newToken) => {
-    localStorage.setItem('voxiq_token', newToken);
-    setToken(newToken); // triggers useEffect → fetches user → sets avatar
+
+  const setGoogleToken = (
+    newToken
+  ) => {
+
+    localStorage.setItem(
+      "voxiq_token",
+      newToken
+    );
+
+    setToken(newToken);
   };
 
-  /* ── logout ── */
+
+  // ==========================================================
+  // LOGOUT
+  // ==========================================================
+
   const logout = () => {
-    localStorage.removeItem('voxiq_token');
+
+    localStorage.removeItem(
+      "voxiq_token"
+    );
+
     setToken(null);
     setUser(null);
   };
 
-  const value = { user, token, loading, login, register, loginWithGoogle, setGoogleToken, logout };
+
+  const value = {
+    user,
+    token,
+    loading,
+    login,
+    register,
+    loginWithGoogle,
+    setGoogleToken,
+    logout,
+  };
+
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={value}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
+
 export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
+
+  const ctx =
+    useContext(AuthContext);
+
+  if (!ctx) {
+    throw new Error(
+      "useAuth must be used inside <AuthProvider>"
+    );
+  }
+
   return ctx;
 };

@@ -1,38 +1,82 @@
-import api from './axios';
+import api from "./axios";
+
 
 export const authAPI = {
 
-  /* ── Login — FastAPI OAuth2 expects form-encoded body ── */
+  // ==========================================================
+  // LOGIN
+  // ==========================================================
+
   login: async (email, password) => {
+
     const form = new URLSearchParams();
-    form.append('username', email);   // FastAPI OAuth2 field is "username"
-    form.append('password', password);
-    const res = await api.post('/api/auth/login', form, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
+
+    form.append("username", email);
+    form.append("password", password);
+
+    const res = await api.post(
+      "/api/auth/login",
+      form,
+      {
+        headers: {
+          "Content-Type":
+            "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
     return res.data;
   },
 
-  /* ── Register — sends full_name to match backend schema ── */
-  register: async (name, email, password) => {
-    const res = await api.post('/api/auth/register', {
-      name,   // matches RegisterRequest schema in FastAPI
-      email,
-      password,
-    });
+
+  // ==========================================================
+  // REGISTER
+  // ==========================================================
+
+  register: async (
+    name,
+    email,
+    password
+  ) => {
+
+    const res = await api.post(
+      "/api/auth/register",
+      {
+        name,
+        email,
+        password,
+      }
+    );
+
     return res.data;
   },
 
-  /* ── Get current user ── */
+
+  // ==========================================================
+  // CURRENT USER
+  // ==========================================================
+
   getMe: async () => {
-    const res = await api.get('/api/auth/me');
+
+    const res = await api.get(
+      "/api/auth/me"
+    );
+
     return res.data;
   },
 
-  /* ── Google OAuth — redirects to FastAPI which handles Google flow ── */
+
+  // ==========================================================
+  // GOOGLE OAUTH
+  // ==========================================================
+
   googleOAuth: () => {
-    window.location.href = `${
-  import.meta.env.VITE_API_URL || 'http://localhost:10000'
-  }/api/auth/google`;
+
+    const backendUrl =
+      import.meta.env.VITE_API_URL ||
+      "http://localhost:10000";
+
+    window.location.href =
+      `${backendUrl}/api/auth/google`;
   },
 };
