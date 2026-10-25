@@ -103,33 +103,21 @@ export function AuthProvider({
   // REGISTER
   // ==========================================================
 
-  const register = async (
-    name,
-    email,
-    password
-  ) => {
-
-    const data =
-      await authAPI.register(
-        name,
-        email,
-        password
-      );
-
-    localStorage.setItem(
-      "voxiq_token",
-      data.access_token
+  const register = async (name, email, password) => {
+    // Create the account without automatically logging in
+    const data = await authAPI.register(
+      name,
+      email,
+      password
     );
 
-    setToken(
-      data.access_token
-    );
-
-    setUser(data.user);
+    // Ensure registration does not establish an authenticated session
+    localStorage.removeItem("voxiq_token");
+    setToken(null);
+    setUser(null);
 
     return data;
   };
-
 
   // ==========================================================
   // GOOGLE

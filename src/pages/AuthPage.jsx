@@ -85,23 +85,47 @@ const AuthPage = () => {
     }
   };
 
-  /* ── Email register → /home ── */
+  /* Email registration → return to login, without auto-login */
   const handleSignUp = async () => {
-    setErrors(p => ({ ...p, signUp: "" }));
+    setErrors((p) => ({ ...p, signUp: "" }));
+
     if (!validateSignUp()) return;
+
     setLoading(true);
+
     try {
-      await register(signUpData.full_name, signUpData.email, signUpData.password);
-      toast.success("Account Created! Welcome to VoxIQ 🎉");
-      navigate("/home", { replace: true });
+      await register(
+        signUpData.full_name,
+        signUpData.email,
+        signUpData.password
+      );
+
+      toast.success(
+        "Account created successfully! Please sign in."
+      );
+
+      // Clear the registration form
+      setSignUpData(SIGNUP_DEFAULT);
+
+      // Switch to the sign-in form
+      setIsSignUp(false);
+
+      // Require the user to log in explicitly
+      navigate("/login", { replace: true });
     } catch (err) {
-      setErrors(p => ({ ...p, signUp: err.message || "Sign up failed. Please try again." }));
-      toast.error(err.message || "Sign up failed. Please try again.");
+      const message =
+        err.response?.data?.detail ||
+        err.message ||
+        "Sign up failed. Please try again.";
+
+      setErrors((p) => ({ ...p, signUp: message }));
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
+  
   /* ── Google → redirects browser to Google → backend → /auth/callback → /home ── */
   const handleGoogle = () => loginWithGoogle();
 
